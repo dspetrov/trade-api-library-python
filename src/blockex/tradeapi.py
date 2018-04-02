@@ -21,7 +21,7 @@ class OfferType(Enum):
 
 
 class BlockExTradeApi(object):
-    """Implementation of  methods needed to access the BlockEx Trading API"""
+    """Implementation of  methods needed to access the BlockEx Trade API"""
     LOGIN_PATH = 'oauth/token'
     LOGOUT_PATH = 'oauth/logout'
     GET_ORDERS_PATH = 'api/orders/get?'
@@ -63,11 +63,12 @@ class BlockExTradeApi(object):
             raise RequestException(exception_message)
 
     def login(self):
-        ''' Performs a login and stores the received access token. Returns the access token of the logged in trader.
-        Raises a RequestException in case of unsuccessful response.
+        """Performs a login and stores the received access token.
 
+        :returns: The access token of the logged in trader
         :rtype: dict
-        '''
+        :raises: RequestException
+        """
 
         access_token = self.get_access_token()
         self.access_token = access_token['access_token']
@@ -76,7 +77,11 @@ class BlockExTradeApi(object):
         return self.access_token
 
     def logout(self):
-        """Performs a logout when logged in and deletes the stored access token."""
+        """Performs a logout when logged in and deletes the stored access token.
+
+        :raises: RequestException
+        """
+
         if self.access_token is not None:
             headers = {'Authorization': 'Bearer ' + self.access_token}
             response = requests.post(
@@ -110,21 +115,22 @@ class BlockExTradeApi(object):
         :type status: string
         :param load_executions: Sets whether to load executed trades for an order. Default value is False.  Optional.
         :type load_executions: boolean
-        :param max_count: Maximum number of items returned. Default value is 100.  Optional.
+        :param max_count: Maximum number of items returned. Default value is 100. Optional.
         :type max_count: int
-        :return: The list of orders. Each order is a dict with the following elements:\n
+        :returns: The list of orders.
+        :rtype: list of dict. Each element has the following data:\n
             orderID (string)\n
             price (float)\n
             initialQuantity (float)\n
             quantity (float)\n
             dateCreated (string)\n
-            offerType (integer) - Possible values 1 (Bid) and 2 (Ask).\n
-            type (integer) - Possible values 1 (Limit), 2 (Market) and 3 (Stop).\n
-            status (integer) - Possible values 10 (Pending), 15 (Failed), 20 (Placed), 30 (Rejected), 40 (Cancelled), 50 (PartiallyExecuted) and 60 (Executed).\n
-            instrumentID (integer)\n
-            trades (list of trades)\n
-            Raises a RequestException in case of unsuccessful response.
-        :rtype: list of orders
+            offerType (int) - Possible values 1 (Bid) and 2 (Ask).\n
+            type (int) - Possible values 1 (Limit), 2 (Market) and 3 (Stop).\n
+            status (int) - Possible values 10 (Pending), 15 (Failed), 20 (Placed), 30 (Rejected), 40 (Cancelled),
+            50 (PartiallyExecuted) and 60 (Executed).\n
+            instrumentID (int)\n
+            trades (list of dict)
+        :raises: RequestException
         """
         data = {}
         if instrument_id is not None:
@@ -166,7 +172,34 @@ class BlockExTradeApi(object):
             offer_type=None,
             status=None,
             max_count=None):
-        """Gets the market orders with the ability to apply filters."""
+        """Gets the market orders with the ability to apply filters.
+
+        :param instrument_id: Instrument identifier. Use get_trader_instruments() to retrieve them. Optional.
+        :type instrument_id: int
+        :param order_type: Order type. Possible values OrderType.LIMIT, OrderType.MARKET and OrderType.STOP. Optional.
+        :type order_type: OrderType
+        :param offer_type: Offer type. Possible values OfferType.BID and OfferType.ASK. Optional.
+        :type offer_type: OfferType
+        :param status: Order status. A comma separated list of integers with possible values 10(Pending), 15(Failed),
+            20(Placed), 30(Rejected), 40(Cancelled), 50(PartiallyExecuted) and 60(Executed). Optional.
+        :type status: string
+        :param max_count: Maximum number of items returned. Default value is 100. Optional.
+        :type max_count: int
+        :returns: The list of orders.
+        :rtype: list of dict. Each element has the following data:\n
+            orderID (string)\n
+            price (float)\n
+            initialQuantity (float)\n
+            quantity (float)\n
+            dateCreated (string)\n
+            offerType (int) - Possible values 1 (Bid) and 2 (Ask).\n
+            type (int) - Possible values 1 (Limit), 2 (Market) and 3 (Stop).\n
+            status (int) - Possible values 10 (Pending), 15 (Failed), 20 (Placed), 30 (Rejected), 40 (Cancelled),
+            50 (PartiallyExecuted) and 60 (Executed).\n
+            instrumentID (int)\n
+            trades (list of dict)
+        :raises: RequestException
+        """
         data = {
             'apiID': self.api_id,
             'instrumentID': instrument_id
@@ -204,7 +237,20 @@ class BlockExTradeApi(object):
             instrument_id,
             price,
             quantity):
-        """Places an order."""
+        """Places an order.
+
+        :param offer_type: Offer type. Possible values OfferType.BID and OfferType.ASK.
+        :type offer_type: OfferType
+        :param order_type: Order type. Possible values OrderType.LIMIT, OrderType.MARKET and OrderType.STOP.
+        :type order_type: OrderType
+        :param instrument_id: Instrument identifier. Use get_trader_instruments() to retrieve them.
+        :type instrument_id: int
+        :param price: Price
+        :type price: float
+        :param quantity: Quantity
+        :type quantity: float
+        :raises: RequestException
+        """
         if not isinstance(order_type, OrderType):
             raise ValueError('order_type must be of type OrderType')
 
@@ -230,7 +276,12 @@ class BlockExTradeApi(object):
             raise RequestException(exception_message)
 
     def cancel_order(self, order_id):
-        """Cancels a specific order."""
+        """Cancels a specific order.
+
+        :param order_id: Order identifier
+        :type order_id: int
+        :raises: RequestException
+        """
         data = {'orderID': order_id}
         query_string = urlencode(data)
         response = self.__make_authorized_request(
@@ -243,7 +294,12 @@ class BlockExTradeApi(object):
             raise RequestException(exception_message)
 
     def cancel_all_orders(self, instrument_id):
-        """Cancels all the orders of the trader for a specific instrument."""
+        """Cancels all the orders of the trader for a specific instrument.
+
+        :param instrument_id: Instrument identifier. Use get_trader_instruments() to retrieve them.
+        :type instrument_id: int
+        :raises: RequestException
+        """
         data = {'instrumentID': instrument_id}
         query_string = urlencode(data)
         response = self.__make_authorized_request(
@@ -256,7 +312,21 @@ class BlockExTradeApi(object):
             raise RequestException(exception_message)
 
     def get_trader_instruments(self):
-        """Gets the available instruments for the trader."""
+        """Gets the available instruments for the trader.
+
+        :returns: The list of instruments.
+        :rtype: list of dict. Each element has the following data:\n
+            id (int)\n
+            description (string)\n
+            name (string)\n
+            baseCurrencyID (int) - The currency you bid for, i.e. for the Bitcoin/Euro base currency is the Bitcoin.\n
+            quoteCurrencyID (int) - The currency you pay with, i.e. for the Bitcoin/Euro quote currency is the Euro.\n
+            minOrderAmount (float) - The minimum order amount for an order. Every order having an amount less than that,
+            will be rejected.\n
+            commissionFeePercent (float) - The percent of the commission fee when trading this instrument.
+            The value is a decimal between 0 and 1.
+        :raises: RequestException
+        """
         response = self.__make_authorized_request(
             'get',
             self.api_url + self.GET_TRADER_INSTRUMENTS_PATH)
@@ -271,7 +341,21 @@ class BlockExTradeApi(object):
             raise RequestException(exception_message)
 
     def get_partner_instruments(self):
-        """Gets the available instruments for the partner."""
+        """Gets the available instruments for the partner.
+
+        :returns: The list of instruments.
+        :rtype: list of dict. Each element has the following data:\n
+            id (int)\n
+            description (string)\n
+            name (string)\n
+            baseCurrencyID (int) - The currency you bid for, i.e. for the Bitcoin/Euro base currency is the Bitcoin.\n
+            quoteCurrencyID (int) - The currency you pay with, i.e. for the Bitcoin/Euro quote currency is the Euro.\n
+            minOrderAmount (float) - The minimum order amount for an order. Every order having an amount less than that,
+            will be rejected.\n
+            commissionFeePercent (float) - The percent of the commission fee when trading this instrument.
+            The value is a decimal between 0 and 1.
+        :raises: RequestException
+        """
         data = {'apiID': self.api_id}
         query_string = urlencode(data)
         response = requests.get(
